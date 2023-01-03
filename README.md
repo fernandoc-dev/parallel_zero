@@ -1,2 +1,2 @@
-# parallel_zero
+# Parallel_zero
 My own CMS using PHP
