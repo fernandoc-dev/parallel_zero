@@ -21,7 +21,7 @@ class Reporting_model extends CI_Model
         * What does it do?
         *
         * It sets a route in the session variable "route"
-        * to later register it in a err_event table to track
+        * to later register it in an err_event table to track
         * the errs occurred.
         *
         * How to use it?

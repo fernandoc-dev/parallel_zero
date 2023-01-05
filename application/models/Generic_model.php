@@ -1194,8 +1194,8 @@ class Generic_model extends CI_Model
         if ($specific_redirection) {
             redirect(base_url($specific_redirection));
         }
-        if (isset($_SESSION['next_page'])) {
-            redirect($_SESSION['next_page']);
+        if (isset($_SESSION['last_page'])) {
+            redirect($_SESSION['last_page']);
             // } elseif (isset($_SESSION['last_page'])) {
             //     redirect($_SESSION['last_page']);
         } else {
@@ -1244,6 +1244,10 @@ class Generic_model extends CI_Model
         /*
         * What does it do?
         *
+        * It receives the class and method wich is excecuting the user
+        * It tries to find a match using the class (section)
+        * in the 'admin_section' table. If the section matches:
+        * --->
         * 
         * How to use it?
         *
@@ -1256,8 +1260,31 @@ class Generic_model extends CI_Model
         $this->reporting_model->execution_trace(get_class(), __FUNCTION__);
 
         $section_parameters['activated'] = 1;
-        $section_parameters['role<='] = $_SESSION['user']['role'];
         $section_parameters['deleted'] = 0;
+
+        $process = $section_parameters['process'];
+        unset($section_parameters['process']);
+
+        $section_parameters['role_create<='] = 5;
+        switch ($process) {
+            case 'create':
+                $section_parameters['role_create<='] = $_SESSION['user']['role'];
+                break;
+            case 'update':
+                $section_parameters['role_update<='] = $_SESSION['user']['role'];
+                break;
+            case 'read_all':
+                $section_parameters['role_read_all<='] = $_SESSION['user']['role'];
+                break;
+            case 'read':
+                $section_parameters['role_read<='] = $_SESSION['user']['role'];
+                break;
+            case 'delete':
+                $section_parameters['role_delete<='] = $_SESSION['user']['role'];
+                break;
+        }
+
+
 
         //Checking if the generic controller is allowed to this section
         if ($section_parameters['section'] == 'Generic_crud') {
@@ -1272,13 +1299,16 @@ class Generic_model extends CI_Model
             $this->set_the_flash_variables_for_modal('Sorry', "The intended page is inaccessible", NULL, 'Ok');
             $this->default_redirection();
         }
+
         $this->data['sections_admin'] = $result[0];
+
+        $this->data['sections_admin']['view'] = $this->data['sections_admin']["view_" .  $process];
 
         //Filling the content item
         if ($content) {
-            if ($section_parameters['process'] == 'read_all') {
+            if ($process == 'read_all') {
                 $this->data['sections_admin']['content'] = $this->read_all_records($this->data['sections_admin']['table_section']);
-            } elseif ($section_parameters['process'] == 'update') {
+            } elseif ($process == 'update') {
                 if (!$this->data['sections_admin']['content'] = $this->read_a_record_by_id($this->data['sections_admin']['table_section'], $id)) {
                     //Reload the controller
                     $this->generic_model->set_the_flash_variables_for_modal('Sorry', 'There was a problem and the selected item could not be loaded', NULL, 'Ok');

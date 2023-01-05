@@ -73,7 +73,7 @@ class Users_admin extends CI_Controller
 
         $section_parameters = array(
             'section' => get_class(),
-            'process' => __FUNCTION__,
+            'process' => __FUNCTION__
         );
         $this->data = $this->generic_model->admin_routine($section_parameters);
 
@@ -332,7 +332,7 @@ class Users_admin extends CI_Controller
         * What does it do?
         *
         * The _load_view method loads the views
-        * according to the controller
+        * according to the controller and the specific action
         *
         * How to use it?
         *
