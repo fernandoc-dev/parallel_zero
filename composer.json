@@ -4,6 +4,8 @@
         "ParallelZero\\": "parallel_zero/",
         "App\\": "app/"
       }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.4"
     }
-  }
-  
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="./parallel_zero/tests/bootstrap.php">
+    <testsuites>
+        <testsuite name="Parallel Zero Test Suite">
+            <directory>./parallel_zero/tests</directory>
+        </testsuite>
+    </testsuites>
+    <!-- Otras configuraciones opcionales aquí -->
+</phpunit>

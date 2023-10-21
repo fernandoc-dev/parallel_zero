@@ -71,6 +71,11 @@ initializeRoutes($router);
 $path = $_SERVER['REQUEST_URI'];
 $path = str_replace(BASE_PATH, '', $path);
 
+// Get the request method and path
+$method = $_SERVER['REQUEST_METHOD'];
+$path = $_SERVER['REQUEST_URI'];
+$path = str_replace(BASE_PATH, '', $path);
+
 // Route the incoming HTTP request
-$router->route($path);
+$router->route($method, $path);
 //------------------------------------------------------------

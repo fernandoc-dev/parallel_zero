@@ -14,9 +14,19 @@ class UserModel extends Model {
      * @return array Result of the create operation
      */
     public function createUserWithValidation(array $data): array {
-        if(parent::read("username = '{$data['username']}'")){
-            return false;
+        $existing_users = parent::read("username = :username", ['username' => $data['username']]);
+    
+        if(!empty($existing_users)){
+            return ['status' => false, 'message' => 'User already exists'];
         }
-        return parent::create($data);
+    
+        $create_status = parent::create($data);
+    
+        if ($create_status) {
+            return ['status' => true, 'message' => 'User created'];
+        } else {
+            return ['status' => false, 'message' => 'User not created'];
+        }
     }
+    
 }

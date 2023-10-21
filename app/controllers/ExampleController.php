@@ -6,41 +6,47 @@ namespace App\Controllers;
 use ParallelZero\Core\Controller;
 use App\Models\UserModel;
 
-class ExampleController extends Controller{
+class ExampleController extends Controller
+{
 
     /**
      * Index method
      * The default method that will be run when no route parameters are provided.
      */
-    public function index() {
+    public function index()
+    {
         $this->view('index', ['title' => 'ParallelZero', 'message' => 'Be simple, be fast.']);
     }
 
-    public function create_user() {
+    public function create_user()
+    {
         $data = [
             'username' => 'johndoe99',
             'name' => 'Jhon Dew',
             'password' => '123456'
         ];
         $userModel = $this->container->load('UserModel', UserModel::class, $this->container, 'users');
-        if($userModel->createUserWithValidation($data)){
+        $result = $userModel->createUserWithValidation($data);
+
+        if ($result['status']) {
             echo 'User created';
-        }else{
-            echo 'User not created';
+        } else {
+            echo 'User not created: ' . $result['message'];
         }
     }
 
-    public function read_user($id=null) {
+    public function read_user($id = null)
+    {
         $userModel = $this->container->load('UserModel', UserModel::class, $this->container, 'users');
-        if($id){
-            $result=$userModel->read("id = $id");
-        }else{
-            $result=$userModel->read();
+        if ($id) {
+            $result = $userModel->read("id = $id");
+        } else {
+            $result = $userModel->read();
         }
-        var_dump($result);
     }
 
-    public function update_user($id) {
+    public function update_user($id)
+    {
         $data = [
             'username' => 'johndoe100',
             'name' => 'Jhon Doe',
@@ -48,10 +54,11 @@ class ExampleController extends Controller{
         ];
 
         $userModel = $this->container->load('UserModel', UserModel::class, $this->container, 'users');
-        $userModel->update($data,"id = $id");
+        $userModel->update($data, "id = $id");
     }
 
-    public function delete_user($id) {
+    public function delete_user($id)
+    {
         $userModel = $this->container->load('UserModel', UserModel::class, $this->container, 'users');
         $userModel->delete("id = $id");
     }

@@ -12,7 +12,7 @@ namespace ParallelZero\Core;
 class Router
 {
     /**
-     * @var array<string, mixed> Associative array to store registered routes and their corresponding handlers.
+     * @var array Associative array to store registered routes and their corresponding handlers.
      */
     private array $routes = [];
 
@@ -34,55 +34,66 @@ class Router
     /**
      * Add a new route to the router.
      *
-     * @param string $path URI path.
+     * @param string $method HTTP method (GET, POST, etc.)
+     * @param string $pattern URI path pattern.
      * @param mixed $handler Callable function or Controller@Method string.
      *
      * @return void
      */
-    public function addRoute(string $path, $handler): void
+    public function addRoute(string $method, string $pattern, $handler): void
     {
-        $this->routes[$path] = $handler;
+        $this->routes[] = [$method, $pattern, $handler];
     }
 
     /**
      * Route the request to the appropriate handler based on the path.
      *
-     * @param string $path URI path.
+     * @param string $method HTTP method.
+     * @param string $uri Request URI.
      *
      * @return void
      */
-    public function route(string $path): void
+    public function route(string $method, string $uri): void
     {
-        if (array_key_exists($path, $this->routes)) {
-            $handler = $this->routes[$path];
-            if (is_callable($handler)) {
-                call_user_func($handler);
-            } elseif (is_string($handler)) {
-                $this->handleControllerAction($handler);
+        foreach ($this->routes as [$routeMethod, $routePattern, $routeHandler]) {
+            if ($routeMethod === $method) {
+                $pattern = '@^' . preg_replace('/{([a-zA-Z0-9_]+)}/', '(?P<\1>[a-zA-Z0-9_\-]+)', $routePattern) . '$@';
+                if (preg_match($pattern, $uri, $matches)) {
+                    foreach ($matches as $key => $match) {
+                        if (is_numeric($key)) {
+                            unset($matches[$key]);
+                        }
+                    }
+                    if (is_callable($routeHandler)) {
+                        call_user_func_array($routeHandler, $matches);
+                    } elseif (is_string($routeHandler)) {
+                        $this->handleControllerAction($routeHandler, $matches);
+                    }
+                    return;
+                }
             }
-        } else {
-            http_response_code(404);
-            echo '404 Not Found';
         }
+        http_response_code(404);
+        echo '404 Not Found';
     }
 
     /**
      * Handles routing to a controller's method.
      *
      * @param string $handler Controller@Method string.
+     * @param array $params Parameters from the URL.
      *
      * @return void
      */
-    private function handleControllerAction(string $handler): void
+    private function handleControllerAction(string $handler, array $params = []): void
     {
         [$controller, $method] = explode('@', $handler);
         $controllerFqn = "App\\Controllers\\{$controller}";
 
         if (class_exists($controllerFqn)) {
             $controllerInstance = new $controllerFqn($this->container);
-
             if (method_exists($controllerInstance, $method)) {
-                $controllerInstance->$method();
+                call_user_func_array([$controllerInstance, $method], $params);
             } else {
                 http_response_code(500);
                 echo "Error: Method {$method} not found in controller {$controllerFqn}";
@@ -93,3 +104,4 @@ class Router
         }
     }
 }
+

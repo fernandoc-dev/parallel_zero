@@ -22,19 +22,26 @@ class Connection {
         if (self::$instance === null) {
             self::$instance = new Connection();
         }
-
         return self::$instance;
     }
 
-    public function executeQuery(string $query, array $params = []): array {
+    // Method to fetch data from the database
+    public function fetchQuery(string $query, array $params = []): array {
         $stmt = $this->pdo->prepare($query);
-
         foreach ($params as $key => &$val) {
             $stmt->bindParam($key, $val);
         }
-
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Method to modify data in the database
+    public function executeModifyQuery(string $query, array $params = []): bool {
+        $stmt = $this->pdo->prepare($query);
+        foreach ($params as $key => &$val) {
+            $stmt->bindParam($key, $val);
+        }
+        return $stmt->execute();
     }
 
     public function beginTransaction() {

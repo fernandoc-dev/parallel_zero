@@ -6,32 +6,19 @@ use ParallelZero\Core\Database\Connection;
 
 /**
  * Class Model
- * A base model class for interacting with the database.
- *
- * @package ParallelZero\Core
+ * A base model for CRUD operations in the database.
  */
 class Model
 {
-    /**
-     * @var Container Dependency Injection Container instance.
-     */
     protected Container $container;
-
-    /**
-     * @var Connection|null Database connection instance.
-     */
     protected ?Connection $db = null;
-
-    /**
-     * @var string Table name.
-     */
     protected string $table;
 
     /**
-     * Model constructor.
+     * Constructor to initialize container and table.
      *
-     * @param Container $container Dependency injection container.
-     * @param string $table Table name.
+     * @param Container $container
+     * @param string $table
      */
     public function __construct(Container $container, string $table)
     {
@@ -40,9 +27,9 @@ class Model
     }
 
     /**
-     * Lazy-load database connection.
+     * Get database connection.
      *
-     * @return Connection The database connection.
+     * @return Connection
      */
     protected function getDb(): Connection
     {
@@ -53,63 +40,71 @@ class Model
     }
 
     /**
-     * Create a new record in the database.
+     * Create new record.
      *
-     * @param array $data The data to insert.
-     * @return array The result of the query.
+     * @param array $data
+     * @return bool
      */
-    public function create(array $data): array
+    public function create(array $data): bool
     {
+        if (empty($data)) {
+            return false;
+        }
+
         $fields = implode(',', array_keys($data));
         $placeholders = ':' . implode(', :', array_keys($data));
-
         $query = "INSERT INTO {$this->table} ({$fields}) VALUES ({$placeholders})";
-        return $this->getDb()->executeQuery($query, $data);
+
+        return $this->getDb()->executeModifyQuery($query, $data);
     }
 
     /**
-     * Read records from the database.
+     * Read records.
      *
-     * @param string $where Optional WHERE clause.
-     * @param array $params Parameters for the WHERE clause.
-     * @return array The result of the query.
+     * @param string $where
+     * @param array $params
+     * @return array
      */
     public function read(string $where = '', array $params = []): array
     {
-        $query = "SELECT * FROM {$this->table} " . $where;
-        return $this->getDb()->executeQuery($query, $params);
-    }
-
-    /**
-     * Update a record in the database.
-     *
-     * @param array $data The data to update.
-     * @param string $where WHERE clause.
-     * @param array $params Parameters for the WHERE clause.
-     * @return array The result of the query.
-     */
-    public function update(array $data, string $where, array $params = []): array
-    {
-        $setFields = '';
-        foreach ($data as $field => $value) {
-            $setFields .= "{$field}=:{$field},";
+        $query = "SELECT * FROM {$this->table}";
+        if (!empty($where)) {
+            $query .= " WHERE " . $where;
         }
-        $setFields = rtrim($setFields, ',');
-
-        $query = "UPDATE {$this->table} SET {$setFields} WHERE {$where}";
-        return $this->getDb()->executeQuery($query, array_merge($data, $params));
+        return $this->getDb()->fetchQuery($query, $params);
     }
 
     /**
-     * Delete a record from the database.
+     * Update record.
      *
-     * @param string $where WHERE clause.
-     * @param array $params Parameters for the WHERE clause.
-     * @return array The result of the query.
+     * @param array $data
+     * @param string $where
+     * @param array $params
+     * @return bool
      */
-    public function delete(string $where, array $params): array
+    public function update(array $data, string $where, array $params = []): bool
     {
-        $query = "DELETE FROM {$this->table} WHERE {$where}";
-        return $this->getDb()->executeQuery($query, $params);
+        $setFields = implode(', ', array_map(fn ($key) => "$key = :$key", array_keys($data)));
+        $query = "UPDATE {$this->table} SET {$setFields}";
+        if (!empty($where)) {
+            $query .= " WHERE " . $where;
+        }
+        return $this->getDb()->executeModifyQuery($query, array_merge($data, $params));
+    }
+
+    /**
+     * Delete record.
+     *
+     * @param string $where
+     * @param array $params
+     * @return bool
+     */
+    public function delete(string $where, array $params): bool
+    {
+        $query = "DELETE FROM {$this->table}";
+        if (!empty($where)) {
+            $query .= " WHERE " . $where;
+        }
+        return $this->getDb()->executeModifyQuery($query, $params);
     }
 }
